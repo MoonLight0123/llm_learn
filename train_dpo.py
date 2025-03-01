@@ -104,7 +104,7 @@ def train_epoch(epoch, wandb):
         if step % args.log_interval == 0:
             spend_time = time.time() - start_time
             Logger(
-                'Epoch:[{}/{}]({}/{}) loss:{:.3f} lr:{:.12f} epoch_Time:{}min:'.format(
+                'Epoch:[{}/{}]({}/{}) loss:{:.12f} lr:{:.12f} epoch_Time:{}min:'.format(
                     epoch + 1,
                     args.epochs,
                     step,
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MiniMind RLHF")
     parser.add_argument("--out_dir", type=str, default="out")
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--batch_size", type=int, default=8)#bs=64会爆显存,bs=8占显存约17GB
+    parser.add_argument("--batch_size", type=int, default=10)#bs=16会爆显存,bs=8占显存约17GB
     # sft阶段学习率为 「5e-6」->「5e-7」长度512，建议离线正负样本「概率」偏好对齐阶段lr <=「1e-8」长度3000，否则很容易遗忘训坏
     parser.add_argument("--learning_rate", type=float, default=1e-8)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
