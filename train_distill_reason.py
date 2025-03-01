@@ -56,11 +56,11 @@ def train_epoch(epoch, wandb):
             sp_ids = torch.isin(Y.view(-1),
                                 torch.tensor(start_of_think_ids + end_of_think_ids
                                              + start_of_answer_ids + end_of_answer_ids
-                                             ).to(args.device))
-            # 在 sp_ids 对应的位置增加额外的惩罚
+                                             ).to(args.device)) # sp_ids是一个与Y.view(-1)形状相同的bool形状的张量，表示Y中每个元素是否在后续的列表中
+            
             loss_mask = loss_mask.view(-1)
             loss_mask_sum = loss_mask.sum()
-            loss_mask[sp_ids] = 10
+            loss_mask[sp_ids] = 10 # 增加标记位置的权重为原来的10倍，使得模型输出符合<think><answer>的模式
             loss_mask = loss_mask.view(Y.size())
             loss = (loss * loss_mask).sum() / loss_mask_sum
             loss += res.aux_loss

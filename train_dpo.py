@@ -26,7 +26,6 @@ def Logger(content):
     if not ddp or dist.get_rank() == 0:
         print(content)
         with open('output.txt', 'a', encoding='utf-8') as file:
-    # 使用 print 函数并指定 file 参数为打开的文件对象
             print(content, file=file)
 
 
