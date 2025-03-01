@@ -136,7 +136,7 @@ def main():
     for idx, prompt in enumerate(prompts if test_mode == 0 else iter(lambda: input('👶: '), '')):
         setup_seed(random.randint(0, 2048))
         
-        if test_mode == 0: print(f'👶: {prompt}')
+        if test_mode == 0: print(f'User: {prompt}')
 
         messages = messages[-args.history_cnt:] if args.history_cnt else []
         messages.append({"role": "user", "content": prompt})
@@ -168,7 +168,7 @@ def main():
                 pad_token_id=tokenizer.pad_token_id
             )
 
-            print('🤖️: ', end='')
+            print('Assistant: ', end='')
             try:
                 if not args.stream: # 不是流式生成，outputs是size=(bs,max_len)的tensor
                     print(tokenizer.decode(outputs.squeeze()[x.shape[1]:].tolist(), skip_special_tokens=True), end='')

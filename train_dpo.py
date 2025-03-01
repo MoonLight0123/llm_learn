@@ -44,7 +44,7 @@ def logits_to_probs(logits, labels):
 
 def dpo_loss(ref_probs, probs, beta):
     # ref_probs 和 probs 都是 shape: (batch_size, seq_len)
-    # 计算每个样本的平均概率
+    # 公式中的π (y_w | x) 记给定x输出y_w的概率，即P(token0)*P(token2)...*P(token N)的乘积，但由于ref_probs已经是取对数了，所以可以转化为加法
     ref_probs = ref_probs.mean(dim=1)
     probs = probs.mean(dim=1)
 
@@ -136,7 +136,7 @@ def init_model(lm_config):
     tokenizer = AutoTokenizer.from_pretrained('/root/minimind/model/minimind_tokenizer')
     model = MiniMindLM(lm_config)
     moe_path = '_moe' if lm_config.use_moe else ''
-    ckp = f'./out/full_sft_{lm_config.dim}{moe_path}.pth'
+    ckp = f'/root/train_res/full_sft_{lm_config.dim}{moe_path}.pth'
     state_dict = torch.load(ckp, map_location=args.device)
     model.load_state_dict(state_dict, strict=False)
     # 初始化参考模型
@@ -167,8 +167,8 @@ def init_distributed_mode():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MiniMind RLHF")
     parser.add_argument("--out_dir", type=str, default="out")
-    parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=8)#bs=64会爆显存,bs=8占显存约17GB
     # sft阶段学习率为 「5e-6」->「5e-7」长度512，建议离线正负样本「概率」偏好对齐阶段lr <=「1e-8」长度3000，否则很容易遗忘训坏
     parser.add_argument("--learning_rate", type=float, default=1e-8)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument("--wandb_project", type=str, default="MiniMind-RLHF-SFT")
     parser.add_argument("--num_workers", type=int, default=1)
     parser.add_argument("--ddp", action="store_true")
-    parser.add_argument("--accumulation_steps", type=int, default=1)
+    parser.add_argument("--accumulation_steps", type=int, default=4)
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--warmup_iters", type=int, default=0)
     parser.add_argument("--log_interval", type=int, default=100)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_layers', default=8, type=int)
     parser.add_argument('--max_seq_len', default=3000, type=int)
     parser.add_argument('--use_moe', default=False, type=bool)
-    parser.add_argument("--data_path", type=str, default="./dataset/dpo.jsonl")
+    parser.add_argument("--data_path", type=str, default="/root/dpo.jsonl")
 
     args = parser.parse_args()
 
