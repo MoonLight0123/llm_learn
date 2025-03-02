@@ -2,7 +2,7 @@
   <h4>复现minimind项目的记录</h4>
 </div>
 
-
+完成LLM的全流程构建，复现包含Pretrain / SFT / RLHF / Distillation 的全流程训练体系
 
 ### pretrain阶段
 
