@@ -7,7 +7,6 @@ import warnings
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from model.model import MiniMindLM
 from model.LMConfig import LMConfig
-from model.model_lora import *
 
 warnings.filterwarnings('ignore')
 
