@@ -35,7 +35,7 @@ class MiniMindVLM(MiniMindLM):
         self.vision_proj = VisionProj(lm_dim=params.dim)
 
     @staticmethod
-    def get_vision_model(model_path="/root/minimind-v/model/vision_model/clip-vit-base-patch16"):
+    def get_vision_model(model_path="/root/llm_learn/model/vision_model/clip-vit-base-patch16"):
         model = CLIPModel.from_pretrained(model_path)
         processor = CLIPProcessor.from_pretrained(model_path)
         # 冻结 vision_encoder 的所有参数
