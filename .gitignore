@@ -1,0 +1,5 @@
+
+model/vision_model/clip-vit-base-patch16/
+
+*.pyc
+__pycache__/

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--out_dir', default='out', type=str)
     parser.add_argument('--temperature', default=0.65, type=float)
     parser.add_argument('--top_p', default=0.85, type=float)
-    parser.add_argument('--device', default='cpu' if torch.cuda.is_available() else 'cpu', type=str)
+    parser.add_argument('--device', default='cuda:0' if torch.cuda.is_available() else 'cpu', type=str)
     # MiniMind2-Small (26M)：(dim=512, n_layers=8)
     # MiniMind2 (104M)：(dim=768, n_layers=16)
     parser.add_argument('--dim', default=512, type=int)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('--use_multi', default=1, type=int)
     parser.add_argument('--stream', default=True, type=bool)
     parser.add_argument('--load', default=0, type=int, help="0: 原生torch权重，1: transformers加载")
-    parser.add_argument('--model_mode', default=1, type=int,
+    parser.add_argument('--model_mode', default=0, type=int,
                         help="0: Pretrain模型，1: SFT模型，2: SFT-多图模型 (beta拓展)")
     args = parser.parse_args()
 
