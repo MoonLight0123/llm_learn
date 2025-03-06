@@ -25,9 +25,9 @@ class LMConfig(PretrainedConfig):
             ####################################################
             use_moe: bool = False,
             ####################################################
-            num_experts_per_tok: int = 2,
-            n_routed_experts: int = 4,
-            n_shared_experts: bool = True,
+            num_experts_per_tok: int = 2, # top_k
+            n_routed_experts: int = 4, # 总的专家数量
+            n_shared_experts: bool = True, # 是否启用共享专家
             scoring_func: str = 'softmax',
             aux_loss_alpha: float = 0.1,
             seq_aux: bool = True,

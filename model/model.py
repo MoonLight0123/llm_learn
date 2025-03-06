@@ -162,20 +162,21 @@ class MoEGate(nn.Module):
 
     def forward(self, hidden_states):
         bsz, seq_len, h = hidden_states.shape
-        hidden_states = hidden_states.view(-1, h)
-        logits = F.linear(hidden_states, self.weight, None)
+        hidden_states = hidden_states.view(-1, h)# (b*s, hidden_dim)
+        logits = F.linear(hidden_states, self.weight, None) # logits.size=(b*s,num_experts)
         if self.scoring_func == 'softmax':
             scores = logits.softmax(dim=-1)
         else:
             raise NotImplementedError(f'insupportable scoring function for MoE gating: {self.scoring_func}')
 
-        topk_weight, topk_idx = torch.topk(scores, k=self.top_k, dim=-1, sorted=False)
+        topk_weight, topk_idx = torch.topk(scores, k=self.top_k, dim=-1, sorted=False) 
+        # topk_weight与topk_idx的shape都是(b*s,top_k)
 
         if self.top_k > 1 and self.norm_topk_prob:
             denominator = topk_weight.sum(dim=-1, keepdim=True) + 1e-20
-            topk_weight = topk_weight / denominator
+            topk_weight = topk_weight / denominator # 让概率和为1
 
-        if self.training and self.alpha > 0.0:
+        if self.training and self.alpha > 0.0: # 辅助损失函数，用于负载均衡
             scores_for_aux = scores
             aux_topk = self.top_k
             topk_idx_for_aux_loss = topk_idx.view(bsz, -1)
@@ -215,29 +216,38 @@ class MOEFeedForward(nn.Module):
         bsz, seq_len, _ = x.shape
         # 使用门控机制选择专家
         topk_idx, topk_weight, aux_loss = self.gate(x)
-        x = x.view(-1, x.shape[-1])
-        flat_topk_idx = topk_idx.view(-1)
+        # topk_weight与topk_idx的shape都是(b*s,top_k)
+        x = x.view(-1, x.shape[-1]) # (b*s,dim)
+        flat_topk_idx = topk_idx.view(-1) # (b*s*top_k,)
         if self.training:
             # 训练模式下，重复输入数据
-            x = x.repeat_interleave(self.config.num_experts_per_tok, dim=0)
+            x = x.repeat_interleave(self.config.num_experts_per_tok, dim=0)# (b*s*top_k,dim)
             y = torch.empty_like(x, dtype=torch.float16)
             for i, expert in enumerate(self.experts):
+                # flat_topk_idx == i表示取出当前专家所负责的token的索引（数量不固定），举例来说
+                # 如果flat_topk_idx[t] == i 就表示 第t//top_k个token由第i个专家负责  ，且这个专家是top_k中的第 t%top_k个专家
                 y[flat_topk_idx == i] = expert(x[flat_topk_idx == i]).to(y.dtype)  # 确保类型一致
             y = (y.view(*topk_weight.shape, -1) * topk_weight.unsqueeze(-1)).sum(dim=1)
             y = y.view(*orig_shape)
         else:
-            # 推理模式下，只选择最优专家
+            # 推理模式
             y = self.moe_infer(x, flat_topk_idx, topk_weight.view(-1, 1)).view(*orig_shape)
         if self.config.n_shared_experts is not None:
-            y = y + self.shared_experts(identity)
+            y = y + self.shared_experts(identity) # 共享专家就是一个FFN
         self.aux_loss = aux_loss
         return y
 
     @torch.no_grad()
     def moe_infer(self, x, flat_expert_indices, flat_expert_weights):
+        # x.shape = (b*s,dim) flat_expert_indices.shape=flat_expert_weights.shape=(b*s*top_k,)
         expert_cache = torch.zeros_like(x)
-        idxs = flat_expert_indices.argsort()
+        idxs = flat_expert_indices.argsort() 
+        # idxs是将flat_expert_indices由小到大排序后得到的索引数组，flat_expert_indices[idx[0]]是flat_expert_indices中最小的元素，
+        # 也就是将各个token按照所负责的专家号排列 idxs=[专家1负责的token索引序列，专家2负责的token索引序列，...，专家n负责的token索引序列] 其中每个专家负责的token索引序列的长度可能不一样
         tokens_per_expert = flat_expert_indices.bincount().cpu().numpy().cumsum(0)
+        # flat_expert_indices.bincount()得到的结果就是每个专家所负责的token的数量
+        # flat_expert_indices.bincount()=[专家1负责的token数量，专家2负责的token数量，...，专家n负责的token数量]
+        # cumsum(0)操作后就是每个专家所负责的token的下标范围
         token_idxs = idxs // self.config.num_experts_per_tok
         # 例如当tokens_per_expert=[6, 15, 20, 26, 33, 38, 46, 52]
         # 当token_idxs=[3, 7, 19, 21, 24, 25,  4,  5,  6, 10, 11, 12...]
@@ -251,8 +261,11 @@ class MOEFeedForward(nn.Module):
             expert_tokens = x[exp_token_idx]
             expert_out = expert(expert_tokens).to(expert_cache.dtype)
             expert_out.mul_(flat_expert_weights[idxs[start_idx:end_idx]])
-            # 使用 scatter_add_ 进行 sum 操作
+            # 使用 scatter_add_ 进行 sum 操作 expert_cache.shape=(b*s,dim)
             expert_cache.scatter_add_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out)
+            # index=exp_token_idx.view(-1, 1).repeat(1, x.shape[-1])
+            # expert_cache[index,:]+=expert_out 将结果加到对应的位置 
+            # 使用 scatter_add_是因为有些位置可能不止被访问一次，保证索引操作不出错，实际上由于b*s个token每个token都有top_k个索引，所以b*s个位置每个位置都会被加top_k
 
         return expert_cache
 
