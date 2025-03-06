@@ -46,7 +46,19 @@
 
 具体来说，使用CLIP-ViT-Base作为Visual Encoder，特征投影方式采用与LlaVA-1相同的方式，即直接采用一个无偏的线性变换完成这个操作
 
-<center>
-<img src="img\llava-structure.png" width="80%">
-</center>
+<div style="text-align: center;">
+    <img src="img/llava-structure.png" width="80%">
+</div>
 
+在单卡NVIDIA 4090完成[训练全过程](train_log)（Pretrain_vlm 2.5h + SFT_vlm 2h），模型训练后得到的所有权重文件均在
+
+## 训练过程
+
+采用类似llava两阶段训练的方式
+
+### Pretain阶段
+冻结...
+
+### SFT阶段
+冻结..
+...
