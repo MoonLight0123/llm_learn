@@ -50,7 +50,7 @@
     <img src="img/llava-structure.png" width="80%">
 </div>
 
-在单卡NVIDIA 4090完成[训练全过程](train_log)（Pretrain_vlm 2.5h + SFT_vlm 2h），模型训练后得到的所有权重文件均在
+在单卡NVIDIA 4090完成[训练全过程](train_log)（Pretrain_vlm 2.5h + SFT_vlm 2h），模型训练后得到的所有权重文件均在[https://pan.baidu.com/s/1IzMqLd0wv9aRds22Q_DDYQ?pwd=w8p1](https://pan.baidu.com/s/1IzMqLd0wv9aRds22Q_DDYQ?pwd=w8p1)
 
 ## 训练过程
 
