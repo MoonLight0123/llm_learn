@@ -78,6 +78,8 @@
 
 ## 训练结果
 
+训练时loss的变换情况如下
+
 <img src="img\pretrain_vlm_loss.png" width="47%"> <img src="img\sft_vlm_loss.png" width="47%">
 
 对模型进行测试，结果如下
