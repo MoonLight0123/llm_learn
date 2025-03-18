@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir", type=str, default="out")
     # 若要以最快速度实现zero则epochs设置为1轮；否则应当利用有限的数据训练2~6个epochs。
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=5e-4)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
     # parser.add_argument("--dtype", type=str, default="bfloat16")
@@ -161,13 +161,21 @@ if __name__ == "__main__":
     
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, max_length=lm_config.max_seq_len)
-    parameters = filter(lambda p: p.requires_grad, model.parameters())
-    engine, optimizer, train_loader, _ = deepspeed.initialize(
-      model=model,
-      model_parameters=parameters,
-      training_data=train_ds,
-      config=args.deepspeed_config,  # 从命令行参数获取配置文件路径
-      dist_init_required=True
+    train_sampler = DistributedSampler(train_ds, shuffle=True)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=args.batch_size,  # 从配置读取或直接指定
+        sampler=train_sampler,
+        num_workers=4,
+        pin_memory=True,
+        drop_last=True  # 避免最后不完整batch导致同步问题
+    )
+    engine, optimizer, _, _ = deepspeed.initialize(
+        model=model,
+        # model_parameters=parameters,  # 改为自动获取参数
+        training_data=train_loader,  # 传入已创建的DataLoader
+        config=args.deepspeed_config,
+        dist_init_required=True
     )
     # train_sampler = DistributedSampler(train_ds) if ddp else None
     # train_loader = DataLoader(
