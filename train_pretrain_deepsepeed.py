@@ -84,10 +84,11 @@ def init_model(lm_config):
 
 def init_distributed_mode():
     deepspeed.init_distributed(dist_backend='nccl')  # 替换原来的dist初始化
-    global ddp_local_rank, DEVICE
-    ddp_local_rank = int(os.environ["LOCAL_RANK"])
-    DEVICE = f"cuda:{ddp_local_rank}"
-    torch.cuda.set_device(DEVICE)
+    # global ddp_local_rank, DEVICE
+    # ddp_local_rank = int(os.environ["LOCAL_RANK"])
+    # DEVICE = f"cuda:{ddp_local_rank}"
+    # torch.cuda.set_device(DEVICE)
+    torch.cuda.set_device(args.local_rank)
 # def init_distributed_mode():
 #     if not ddp: return
 #     global ddp_local_rank, DEVICE
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     #     wandb.init(project=args.wandb_project, name=args.wandb_run_name)
     # else:
     #     wandb = None
-
+    
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, max_length=lm_config.max_seq_len)
     parameters = filter(lambda p: p.requires_grad, model.parameters())
