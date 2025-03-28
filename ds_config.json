@@ -9,9 +9,6 @@
         "weight_decay": 0.01
       }
     },
-    "fp16": {
-      "enabled": true
-    },
     "zero_optimization": {
       "stage": 1,
       "offload_optimizer": {
