@@ -24,10 +24,10 @@ warnings.filterwarnings('ignore')
 
 
 def Logger(content):
-    # if dist.get_rank() == 0:
-    print(content)
-    with open('output.txt', 'a', encoding='utf-8') as file:
-        print(content, file=file)
+    if(args.global_rank<=0)
+        print(content)
+        with open('output.txt', 'a', encoding='utf-8') as file:
+            print(content, file=file)
 
 
 def get_lr(current_step, total_steps, lr):
@@ -84,11 +84,9 @@ def init_model(lm_config):
 
 def init_distributed_mode():
     deepspeed.init_distributed(dist_backend='nccl')  # 替换原来的dist初始化
-    # global ddp_local_rank, DEVICE
-    # ddp_local_rank = int(os.environ["LOCAL_RANK"])
-    # DEVICE = f"cuda:{ddp_local_rank}"
-    # torch.cuda.set_device(DEVICE)
     torch.cuda.set_device(args.local_rank)
+    device = torch.device("cuda",args.local_rank)
+    
 # def init_distributed_mode():
 #     if not ddp: return
 #     global ddp_local_rank, DEVICE
@@ -137,48 +135,31 @@ if __name__ == "__main__":
     args.save_dir = './train_res'
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
-    tokens_per_iter = args.batch_size * lm_config.max_seq_len
     torch.manual_seed(1337)
-    device_type = "cuda" if "cuda" in args.device else "cpu"
-
-    # args.wandb_run_name = f"MiniMind-Pretrain-Epoch-{args.epochs}-BatchSize-{args.batch_size}-LearningRate-{args.learning_rate}"
-
-    ctx = nullcontext() if device_type == "cpu" else torch.cuda.amp.autocast()
-
-    # ddp = int(os.environ.get("RANK", -1)) != -1  # is this a ddp run?
-    # ddp_local_rank, DEVICE = 0, "cuda:0"
-
-    # if ddp:
-    #     init_distributed_mode()
-    #     args.device = torch.device(DEVICE)
-
-    # if args.use_wandb and (not ddp or ddp_local_rank == 0):
-    #     import wandb
-
-    #     wandb.init(project=args.wandb_project, name=args.wandb_run_name)
-    # else:
-    #     wandb = None
     
+    init_distributed_mode()
+    # args.global_rank
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, max_length=lm_config.max_seq_len)
+    
     parameters = filter(lambda p: p.requires_grad, model.parameters())
-    engine, optimizer, train_loader, _ = deepspeed.initialize(
+    engine, optimizer, _, _ = deepspeed.initialize(
       model=model,
       model_parameters=parameters,
-      training_data=train_ds,
+    #   training_data=train_ds,
       config=args.deepspeed_config,  # 从命令行参数获取配置文件路径
       dist_init_required=True
     )
-    # train_sampler = DistributedSampler(train_ds) if ddp else None
-    # train_loader = DataLoader(
-    #     train_ds,
-    #     batch_size=args.batch_size,
-    #     pin_memory=True,
-    #     drop_last=False,
-    #     shuffle=False,
-    #     num_workers=args.num_workers,
-    #     sampler=train_sampler
-    # )
+    train_sampler = DistributedSampler(train_ds)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=args.batch_size,
+        pin_memory=True,
+        drop_last=False,
+        shuffle=False,
+        num_workers=args.num_workers,
+        sampler=train_sampler
+    )
 
     # scaler = torch.cuda.amp.GradScaler(enabled=(args.dtype in ['float16', 'bfloat16']))
     # optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
