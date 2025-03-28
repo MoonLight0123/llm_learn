@@ -146,14 +146,15 @@ if __name__ == "__main__":
     engine, optimizer, _, _ = deepspeed.initialize(
       model=model,
       model_parameters=parameters,
-    #   training_data=train_ds,
+      args=args,
       config=args.deepspeed_config,  # 从命令行参数获取配置文件路径
       dist_init_required=True
     )
     train_sampler = DistributedSampler(train_ds)
+    args.micro_batch_size = 4
     train_loader = DataLoader(
         train_ds,
-        batch_size=args.batch_size,
+        batch_size=args.micro_batch_size,
         pin_memory=True,
         drop_last=False,
         shuffle=False,
