@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore')
 
 
 def Logger(content):
-    if(args.global_rank<=0)
+    if(args.global_rank<=0):
         print(content)
         with open('output.txt', 'a', encoding='utf-8') as file:
             print(content, file=file)
