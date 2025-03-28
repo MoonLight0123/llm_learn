@@ -146,7 +146,7 @@ if __name__ == "__main__":
     engine, optimizer, _, _ = deepspeed.initialize(
       model=model,
       model_parameters=parameters,
-      args=args,
+    #   args=args,
       config=args.deepspeed_config,  # 从命令行参数获取配置文件路径
       dist_init_required=True
     )
