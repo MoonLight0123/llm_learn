@@ -38,9 +38,9 @@ def train_epoch(epoch):
     loss_fct = nn.CrossEntropyLoss(reduction='none')
     start_time = time.time()
     for step, (X, Y, loss_mask) in enumerate(train_loader):
-        X = X.to(engine.device)
-        Y = Y.to(engine.device)
-        loss_mask = loss_mask.to(engine.device)
+        X = X.to(device)
+        Y = Y.to(device)
+        loss_mask = loss_mask.to(device)
 
         lr = get_lr(epoch * iter_per_epoch + step, args.epochs * iter_per_epoch, args.learning_rate)
         
@@ -136,7 +136,10 @@ if __name__ == "__main__":
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
     torch.manual_seed(1337)
-    
+    print("!!!!")
+    print(args.local_rank)
+    print(device)
+    print("@@@@")
     init_distributed_mode()
     # args.global_rank
     model, tokenizer = init_model(lm_config)
