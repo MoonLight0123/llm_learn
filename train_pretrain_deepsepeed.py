@@ -82,10 +82,10 @@ def init_model(lm_config):
     Logger(f'LLM总参数量：{sum(p.numel() for p in model.parameters() if p.requires_grad) / 1e6:.3f} 百万')
     return model, tokenizer
 
-def init_distributed_mode():
-    deepspeed.init_distributed(dist_backend='nccl')  # 替换原来的dist初始化
-    torch.cuda.set_device(args.local_rank)
-    device = torch.device("cuda",args.local_rank)
+# def init_distributed_mode():
+    # deepspeed.init_distributed(dist_backend='nccl')  # 替换原来的dist初始化
+    # torch.cuda.set_device(args.local_rank)
+    # device = torch.device("cuda",args.local_rank)
     
 # def init_distributed_mode():
 #     if not ddp: return
@@ -136,7 +136,9 @@ if __name__ == "__main__":
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
     torch.manual_seed(1337)
-    init_distributed_mode()
+    deepspeed.init_distributed(dist_backend='nccl')  # 替换原来的dist初始化
+    torch.cuda.set_device(args.local_rank)
+    device = torch.device("cuda",args.local_rank)
     print("!!!!")
     print(args.local_rank)
     print(device)
