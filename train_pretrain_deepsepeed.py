@@ -136,11 +136,11 @@ if __name__ == "__main__":
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
     torch.manual_seed(1337)
+    init_distributed_mode()
     print("!!!!")
     print(args.local_rank)
     print(device)
     print("@@@@")
-    init_distributed_mode()
     # args.global_rank
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, max_length=lm_config.max_seq_len)
