@@ -8,7 +8,6 @@
       "allgather_bucket_size": 2e8,
       "overlap_comm": true,
       "reduce_scatter": true,
-      "reduce_bucket_size": "auto",
       "contiguous_gradients": true
   },
   "gradient_accumulation_steps": 1,
