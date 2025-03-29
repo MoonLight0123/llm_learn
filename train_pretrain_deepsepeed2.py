@@ -143,7 +143,8 @@ if __name__ == "__main__":
     parser.add_argument('--use_moe', default=False, type=bool)
     parser.add_argument("--data_path", type=str, default="/kaggle/working/pretrain_hq.jsonl")
     args = parser.parse_args()
-
+    
+    args.use_moe=True
     lm_config = LMConfig(dim=args.dim, n_layers=args.n_layers, max_seq_len=args.max_seq_len, use_moe=args.use_moe)
     # args.save_dir = os.path.join(args.out_dir)
     args.save_dir = '/root/train_res'
@@ -152,7 +153,6 @@ if __name__ == "__main__":
     tokens_per_iter = args.batch_size * lm_config.max_seq_len
     torch.manual_seed(1337)
     device_type = "cuda" if "cuda" in args.device else "cpu"
-    args.use_moe=True
     # args.wandb_run_name = f"MiniMind-Pretrain-Epoch-{args.epochs}-BatchSize-{args.batch_size}-LearningRate-{args.learning_rate}"
 
     # ctx = nullcontext() if device_type == "cpu" else torch.cuda.amp.autocast()
