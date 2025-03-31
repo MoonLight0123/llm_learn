@@ -40,7 +40,7 @@
 训练时采用如下所示的ChatML格式的对话模板
 
     <s>system
-    你是 MiniMind，是一个有用的人工智能助手。</s>
+    你是一个有用的人工智能助手。</s>
     <s>user
     用户提问</s>
     <s>assistant
